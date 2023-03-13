@@ -1,0 +1,10 @@
+{
+  "files.associations": {
+    "*.html": "html",
+    "*.ast": "json",
+    "*.txt": "makefile",
+    "sstream": "cpp",
+    "__config": "cpp",
+    "__nullptr": "cpp"
+  }
+}
