@@ -1,3 +1,4 @@
 ## 0.0.1
-
-* TODO: Describe initial release.
+* TODO: Initial open source version
+## 0.0.2
+* TODO: Fix that cannot be called under ios

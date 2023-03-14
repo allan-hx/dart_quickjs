@@ -37,6 +37,18 @@ abstract class Interval extends Plugin {
   // 上下文
   late ffi.Pointer<JSContext> context;
 
+  @override
+  void destroy(Runtime runtime) {
+    clocks.forEach((id, clock) {
+      // 停止
+      clock.timer.cancel();
+      // 释放js函数
+      clock.callback.free();
+    });
+
+    clocks.clear();
+  }
+
   // 创建
   JSNumber createTimer(JSFunction callback, [JSObject? time]);
 
@@ -63,8 +75,8 @@ class SetInterval extends Interval {
 
   @override
   void onCreate(Runtime runtime) {
+    final global = runtime.global;
     _runtime = runtime;
-    final global = _runtime.global;
     context = _runtime.context;
     global.setPropertyStr(
       'setInterval',
@@ -103,8 +115,8 @@ class SetTimeout extends Interval {
 
   @override
   void onCreate(Runtime runtime) {
+    final global = runtime.global;
     _runtime = runtime;
-    final global = _runtime.global;
     context = _runtime.context;
     global.setPropertyStr(
       'setTimeout',
@@ -128,17 +140,12 @@ class SetTimeout extends Interval {
       Duration(milliseconds: duration),
       () {
         callback.call();
-        clearTimeout(id);
+        clear(id);
         _runtime.dispatch();
       },
     );
 
     clocks[key] = Clock(timer: timer, callback: callback);
     return id;
-  }
-
-  // 清除
-  void clearTimeout(JSNumber value) {
-    clear(value);
   }
 }

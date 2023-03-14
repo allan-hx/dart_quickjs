@@ -228,6 +228,18 @@ class QuickjsLibrary {
       lookup<NativeFunction<Void Function(Pointer<JSContext>, Pointer<Char>)>>(
           'JS_FreeCString');
 
+  // 释放上下文
+  late final freeContext =
+      _freeContext.asFunction<void Function(Pointer<JSContext>)>();
+  late final _freeContext =
+      lookup<NativeFunction<Void Function(Pointer<JSContext>)>>('JS_FreeContext');
+
+  // 释放运行时
+  late final freeRuntime =
+      _freeRuntime.asFunction<void Function(Pointer<JSRuntime>)>();
+  late final _freeRuntime =
+      lookup<NativeFunction<Void Function(Pointer<JSRuntime>)>>('FreeRuntime');
+
   // js value转 string
   late final jsToCString = _jsToCString.asFunction<
       Pointer<Char> Function(Pointer<JSContext>, Pointer<JSValue>)>();

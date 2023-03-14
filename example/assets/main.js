@@ -1,3 +1,5 @@
-import { info } from '../allan/info';
+import { info } from 'allan';
 
-_println_('log', [info.name]);
+setInterval(() => {
+  _println_('log', [info.name]);
+}, 1000);

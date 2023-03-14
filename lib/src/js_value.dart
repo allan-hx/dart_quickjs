@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ffi';
 import 'package:ffi/ffi.dart';
 
@@ -115,11 +116,14 @@ class JSObject {
     _pointer = library.dupValue(context, pointer);
   }
 
-  // 释放
+  // 释放 - 异步
   void free() {
-    Future(() {
-      library.freeValue(context, pointer);
-    });
+    library.freeValue(context, pointer);
+  }
+
+  // 释放 - 异步
+  void freeAsync() {
+    Timer.run(free);
   }
 
   @override
@@ -202,7 +206,7 @@ class JSArray extends JSObject {
   // 根据下标获取
   T index<T extends JSObject>(int index) {
     final key = JSNumber.create(context, index);
-    key.free();
+    key.freeAsync();
     return getProperty<T>(key)!;
   }
 
@@ -262,6 +266,14 @@ class JSFunction extends JSObject {
       pointer,
       callback: callback,
     );
+  }
+
+  // 释放 - 异步
+  @override
+  void free() {
+    final symbol = callback.hashCode.toString();
+    Observer.instance.off(symbol);
+    super.free();
   }
 
   // 添加订阅

@@ -86,6 +86,9 @@ extern "C" {
   // 释放js value
   DART_EXPORT void JSFreeValue(JSContext *ctx, JSValue *value);
 
+  // 释放运行时
+  DART_EXPORT void FreeRuntime(JSRuntime *runtime);
+
   // js value转string
   DART_EXPORT const char *JSToCString(JSContext *ctx, JSValueConst *value);
 

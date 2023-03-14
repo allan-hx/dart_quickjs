@@ -6,14 +6,21 @@
 static JSValue _channel(JSContext *ctx, JSValueConst this_val, int32_t argc, JSValueConst *argv, int32_t magic, JSValue *method) {
   JSRuntime *runtime = JS_GetRuntime(ctx);
   CHANNEL *channel = (CHANNEL *)JS_GetRuntimeOpaque(runtime);
-  return *channel(ctx, JS_ToCString(ctx, *method), argc, argv);
+  const char *symbol = JS_ToCString(ctx, *method);
+
+  JS_FreeValue(ctx, *method);
+
+  return *channel(ctx, symbol, argc, argv);
 }
 
 // 模块加载
 static JSModuleDef *_moduleLoader(JSContext *ctx, const char *module_name, void *opaque) {
   JSRuntime *runtime = JS_GetRuntime(ctx);
   CHANNEL *channel = (CHANNEL *)JS_GetRuntimeOpaque(runtime);
-  const char *str = (char *)channel(ctx, "module_loader", 1, new JSValue(JS_NewString(ctx, module_name)));
+  JSValue *name = new JSValue(JS_NewString(ctx, module_name));
+  const char *str = (char *)channel(ctx, "module_loader", 1, name);
+
+  JS_FreeValue(ctx, *name);
 
   if (str == 0) {
     return NULL;
@@ -97,7 +104,11 @@ extern "C" {
   }
 
   DART_EXPORT JSValue *NewCFunctionData(JSContext *ctx, const char *symbol) {
-    JSValue value = JS_NewCFunctionData(ctx, _channel, 0, 0, 1, new JSValue(JS_NewString(ctx, symbol)));
+    JSValue *data = new JSValue(JS_NewString(ctx, symbol));
+    JSValue value = JS_NewCFunctionData(ctx, _channel, 0, 0, 1, data);
+
+    JS_FreeValue(ctx, *data);
+
     return new JSValue(value);
   }
 
@@ -141,6 +152,11 @@ extern "C" {
 
   DART_EXPORT void JSFreeValue(JSContext *ctx, JSValue *value) {
     JS_FreeValue(ctx, *value);
+  }
+
+  DART_EXPORT void FreeRuntime(JSRuntime *runtime) {
+    JS_SetRuntimeOpaque(runtime, nullptr);
+    JS_FreeRuntime(runtime);
   }
 
   DART_EXPORT const char *JSToCString(JSContext *ctx, JSValueConst *value) {

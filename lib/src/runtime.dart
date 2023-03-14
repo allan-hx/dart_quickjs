@@ -38,6 +38,16 @@ class Runtime {
   late JSObject _global;
   JSObject get global => _global;
 
+  // 插件
+  final List<Plugin> _plugins = [
+    // 日志打印
+    Println(),
+    // 定时器
+    SetTimeout(),
+    // 计时器
+    SetInterval(),
+  ];
+
   // 通道
   static Pointer _channel(
     Pointer<JSContext> context,
@@ -59,8 +69,9 @@ class Runtime {
       case 'module_loader':
         final pointer = library.getRuntime(context);
         final runtime = _runtimes[pointer.hashCode];
-        final moduleName = args.first as JSString;
-        return runtime!._moduleLoader(moduleName.value);
+        final moduleName = (args.first as JSString).value;
+
+        return runtime!._moduleLoader(moduleName);
       default:
         return Observer.instance.emit(name, args).pointer;
     }
@@ -84,7 +95,6 @@ class Runtime {
 
     // 开始module
     if (moduleLoader != null) {
-      // Observer.instance.on('module_loader', _moduleLoader);
       library.enableModuleLoader(runtime);
     }
 
@@ -94,9 +104,9 @@ class Runtime {
     }
 
     // 加载插件
-    plugins = [...?plugins, Println(), SetInterval(), SetTimeout()];
+    _plugins.addAll(plugins ?? <Plugin>[]);
 
-    for (Plugin item in plugins) {
+    for (Plugin item in _plugins) {
       use(item);
     }
   }
@@ -130,8 +140,9 @@ class Runtime {
       throw '$fileName执行异常:$message';
     }
 
-    // 执行微任务
+    // 执行挂起的任务
     dispatch();
+
     return value.toJSValue(_context);
   }
 
@@ -155,5 +166,18 @@ class Runtime {
   // 加载插件
   void use(Plugin plugin) {
     plugin.onCreate(this);
+  }
+
+  // 销毁
+  void destroy() {
+    // 销毁插件
+    for (Plugin item in _plugins) {
+      item.destroy(this);
+    }
+
+    global.free();
+    _runtimes.remove(runtime.hashCode);
+    library.freeContext(context);
+    library.freeRuntime(runtime);
   }
 }
