@@ -16,6 +16,7 @@ final Map<int, Runtime> _runtimes = {};
 class Runtime {
   Runtime({
     int? stackSize,
+    int? memoryLimit,
     List<Plugin>? plugins,
     this.moduleLoader,
   }) : runtime = library.newRuntime() {
@@ -80,6 +81,8 @@ class Runtime {
   void _init({
     // 栈大小
     int? stackSize,
+    // 内存限制
+    int? memoryLimit,
     // 插件
     List<Plugin>? plugins,
   }) {
@@ -103,6 +106,11 @@ class Runtime {
       library.setMaxStackSize(runtime, stackSize);
     }
 
+    // 设置运行内存
+    if (memoryLimit != null) {
+      library.setMemoryLimit(runtime, memoryLimit);
+    }
+
     // 加载插件
     _plugins.addAll(plugins ?? <Plugin>[]);
 
@@ -114,6 +122,11 @@ class Runtime {
   // 设置最大栈
   void setStackSize(int stackSize) {
     library.setMaxStackSize(runtime, stackSize);
+  }
+
+  // 更新栈顶
+  void updateStackTop() {
+    library.updateStackTop(runtime);
   }
 
   // 执行脚本

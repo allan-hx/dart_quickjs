@@ -77,6 +77,20 @@ class QuickjsLibrary {
       lookup<NativeFunction<Void Function(Pointer<JSRuntime>, Int32)>>(
           'JS_SetMaxStackSize');
 
+  // 设置内存
+  late final setMemoryLimit =
+      _setMemoryLimit.asFunction<void Function(Pointer<JSRuntime>, int)>();
+  late final _setMemoryLimit =
+      lookup<NativeFunction<Void Function(Pointer<JSRuntime>, Int32)>>(
+          'JS_SetMemoryLimit');
+
+  // 更新栈顶
+  late final updateStackTop =
+      _updateStackTop.asFunction<void Function(Pointer<JSRuntime>)>();
+  late final _updateStackTop =
+      lookup<NativeFunction<Void Function(Pointer<JSRuntime>)>>(
+          'JS_UpdateStackTop');
+
   // 获取异常
   late final getException =
       _getException.asFunction<Pointer<JSValue> Function(Pointer<JSContext>)>();
@@ -232,7 +246,8 @@ class QuickjsLibrary {
   late final freeContext =
       _freeContext.asFunction<void Function(Pointer<JSContext>)>();
   late final _freeContext =
-      lookup<NativeFunction<Void Function(Pointer<JSContext>)>>('JS_FreeContext');
+      lookup<NativeFunction<Void Function(Pointer<JSContext>)>>(
+          'JS_FreeContext');
 
   // 释放运行时
   late final freeRuntime =
