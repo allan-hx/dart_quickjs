@@ -2,9 +2,10 @@ import 'dart:async';
 import 'dart:ffi';
 import 'package:ffi/ffi.dart';
 
+import 'cache.dart';
 import 'common.dart';
 import 'library.dart';
-import 'observer.dart';
+import 'runtime.dart';
 import 'typedef.dart';
 import 'extensions.dart';
 
@@ -226,6 +227,56 @@ class JSArray extends JSObject {
     return state == 1;
   }
 
+  JSObject shift() {
+    final shift = getPropertyStr<JSFunction>('shift')!;
+    return shift.call(null, this);
+  }
+
+  JSNumber unshift(List<JSObject> args) {
+    final unshift = getPropertyStr<JSFunction>('unshift')!;
+    return unshift.call(args, this) as JSNumber;
+  }
+
+  JSObject pop() {
+    final shift = getPropertyStr<JSFunction>('pop');
+    return shift!.call(null, this);
+  }
+
+  JSArray splice(int index, [int? howmany, List<JSObject>? value]) {
+    final splice = getPropertyStr<JSFunction>('splice')!;
+    final List<JSObject> args = [];
+
+    args.add(JSNumber.create(context, index));
+
+    if (howmany != null) {
+      args.add(JSNumber.create(context, howmany));
+    }
+
+    args.addAll(value ?? <JSObject>[]);
+
+    return splice.call(args, this) as JSArray;
+  }
+
+  JSArray concat(JSArray value) {
+    final concat = getPropertyStr<JSFunction>('concat')!;
+    return concat.call([value], this) as JSArray;
+  }
+
+  JSNumber indexOf(JSObject value) {
+    final indexOf = getPropertyStr<JSFunction>('indexOf')!;
+    return indexOf.call([value], this) as JSNumber;
+  }
+
+  JSNumber lastIndexOf(JSObject value) {
+    final lastIndexOf = getPropertyStr<JSFunction>('lastIndexOf')!;
+    return lastIndexOf.call([value], this) as JSNumber;
+  }
+
+  JSArray reverse() {
+    final reverse = getPropertyStr<JSFunction>('reverse')!;
+    return reverse.call(null, this) as JSArray;
+  }
+
   void forEach(void Function(JSObject item, int index) callback) {
     final int len = length;
 
@@ -250,10 +301,12 @@ class JSFunction extends JSObject {
     super.context,
     super.pointer, {
     this.callback,
-  });
+  }) : _runtime = Cache.instance.getRuntime(context);
 
   // 回调
   final Function? callback;
+  // 当前运行时
+  final Runtime _runtime;
 
   factory JSFunction.create(Pointer<JSContext> context, Function callback) {
     final symbol = callback.hashCode.toString().toNativeUtf8().cast<Char>();
@@ -272,7 +325,7 @@ class JSFunction extends JSObject {
   @override
   void free() {
     final symbol = callback.hashCode.toString();
-    Observer.instance.off(symbol);
+    _runtime.off(symbol);
     super.free();
   }
 
@@ -280,7 +333,7 @@ class JSFunction extends JSObject {
   void _subscription() {
     if (callback != null) {
       final String symbol = callback.hashCode.toString();
-      Observer.instance.on(symbol, callback!);
+      _runtime.on(symbol, callback!);
     }
   }
 
@@ -309,7 +362,8 @@ class JSPromise extends JSObject {
     Pointer<JSValue>? resolvePointer,
     Pointer<JSValue>? rejectPointer,
   })  : _resolvePointer = resolvePointer,
-        _rejectPointer = rejectPointer;
+        _rejectPointer = rejectPointer,
+        _runtime = Cache.instance.getRuntime(context);
 
   factory JSPromise.create(Pointer<JSContext> context) {
     // resject方法
@@ -331,6 +385,8 @@ class JSPromise extends JSObject {
   final Pointer<JSValue>? _resolvePointer;
   // js reject方法
   final Pointer<JSValue>? _rejectPointer;
+  // 当前运行时
+  final Runtime _runtime;
 
   void resolve([JSObject? value]) {
     final func = JSFunction(context, _resolvePointer!);
@@ -349,13 +405,13 @@ class JSPromise extends JSObject {
     late String symbol;
 
     final handler = JSFunction.create(context, ([JSObject? value]) {
-      Observer.instance.off(symbol);
+      _runtime.off(symbol);
       callback(value);
     });
 
     symbol = handler.callback.hashCode.toString();
 
-    Observer.instance.on(symbol, handler.callback!);
+    _runtime.on(symbol, handler.callback!);
 
     final func = getPropertyStr<JSFunction>('then')!;
     final value = func.call([handler], this);
@@ -368,13 +424,13 @@ class JSPromise extends JSObject {
     late String symbol;
 
     final handler = JSFunction.create(context, ([JSObject? value]) {
-      Observer.instance.off(symbol);
+      _runtime.off(symbol);
       callback(value);
     });
 
     symbol = handler.callback.hashCode.toString();
 
-    Observer.instance.on(symbol, handler.callback!);
+    _runtime.on(symbol, handler.callback!);
 
     final func = getPropertyStr<JSFunction>('catch')!;
     final value = func.call([handler], this);

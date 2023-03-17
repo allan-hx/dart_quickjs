@@ -3,10 +3,6 @@ import 'package:flutter/foundation.dart';
 import 'js_value.dart';
 
 class Observer {
-  Observer._();
-
-  static final instance = Observer._();
-
   final Map<String, Function> _listeners = {};
 
   // 订阅
@@ -31,5 +27,10 @@ class Observer {
     if (_listeners.containsKey(symbol)) {
       _listeners.remove(symbol);
     }
+  }
+
+  // 清除所有订阅
+  void clear() {
+    _listeners.clear();
   }
 }

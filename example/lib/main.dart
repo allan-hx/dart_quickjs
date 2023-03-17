@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:dart_quickjs/dart_quickjs.dart';
 
 void main(List<String> args) {
@@ -20,11 +19,7 @@ class App extends StatelessWidget {
 class Home extends StatelessWidget {
   Home({Key? key}) : super(key: key);
 
-  final runtime = Runtime(
-    moduleLoader: (String name) {
-      return "export const info = {name: 'Allan'};";
-    },
-  );
+  final runtime = Runtime();
 
   @override
   Widget build(BuildContext context) {
@@ -35,9 +30,9 @@ class Home extends StatelessWidget {
           children: [
             // 执行
             ElevatedButton(
-              onPressed: () async {
-                final script = await rootBundle.loadString('assets/main.js');
-                runtime.evaluateJavaScript(script, 'main.js', JSEvalType.module);
+              onPressed: () {
+                // 执行代码，打印name
+                runtime.evaluateJavaScript('println("Hello World");', 'main.js');
               },
               child: const Text('Run'),
             ),

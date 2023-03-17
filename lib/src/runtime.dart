@@ -2,18 +2,16 @@ import 'dart:async';
 import 'dart:ffi';
 import 'package:ffi/ffi.dart';
 
+import 'cache.dart';
 import 'js_value.dart';
 import 'library.dart';
 import 'observer.dart';
 import 'plugin.dart';
-import 'plugins/println.dart';
 import 'plugins/timer.dart';
 import 'typedef.dart';
 import 'extensions.dart';
 
-final Map<int, Runtime> _runtimes = {};
-
-class Runtime {
+class Runtime extends Observer {
   Runtime({
     int? stackSize,
     int? memoryLimit,
@@ -41,8 +39,6 @@ class Runtime {
 
   // 插件
   final List<Plugin> _plugins = [
-    // 日志打印
-    Println(),
     // 定时器
     SetTimeout(),
     // 计时器
@@ -56,6 +52,8 @@ class Runtime {
     int argc,
     Pointer<JSValue> argv,
   ) {
+    // 获取运行时
+    final runtime = Cache.instance.getRuntime(context);
     // 方法标识
     final name = symbol.cast<Utf8>().toDartString();
     // 参数
@@ -65,16 +63,20 @@ class Runtime {
       return value.toJSValue(context);
     });
 
+    // 日志打印
+    if (name == runtime._println.hashCode.toString()) {
+      runtime._println(args);
+      return undefined;
+    }
+
     switch (name) {
       // 模块加载
       case 'module_loader':
-        final pointer = library.getRuntime(context);
-        final runtime = _runtimes[pointer.hashCode];
         final moduleName = (args.first as JSString).value;
 
-        return runtime!._moduleLoader(moduleName);
+        return runtime._moduleLoader(moduleName);
       default:
-        return Observer.instance.emit(name, args).pointer;
+        return runtime.emit(name, args).pointer;
     }
   }
 
@@ -87,7 +89,7 @@ class Runtime {
     List<Plugin>? plugins,
   }) {
     // 记录当前运行时
-    _runtimes[runtime.hashCode] = this;
+    Cache.instance.saveRuntime(runtime, this);
     // 创建默认上下文
     _context = library.newContext(runtime);
     // 获取全局对象
@@ -114,8 +116,20 @@ class Runtime {
     // 加载插件
     _plugins.addAll(plugins ?? <Plugin>[]);
 
+    // 日志打印方法
+    global.setPropertyStr('println', JSFunction.create(context, _println));
+
     for (Plugin item in _plugins) {
       use(item);
+    }
+  }
+
+  // 日志打印
+  void _println(List<JSObject>? args) {
+    if (args != null) {
+      final messages = args.map((item) => item.toString()).toList();
+      // ignore: avoid_print
+      print('JS/println: ${messages.join(", ")}');
     }
   }
 
@@ -183,13 +197,17 @@ class Runtime {
 
   // 销毁
   void destroy() {
-    // 销毁插件
+    // 释放插件插件
     for (Plugin item in _plugins) {
       item.destroy(this);
     }
 
+    // 清除事件订阅
+    clear();
+    // 清除运行时缓存
+    Cache.instance.removeRuntime(runtime);
+    // 释放全局对象
     global.free();
-    _runtimes.remove(runtime.hashCode);
     library.freeContext(context);
     library.freeRuntime(runtime);
   }
