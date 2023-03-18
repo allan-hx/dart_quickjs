@@ -38,7 +38,7 @@ runtime.evaluateJavaScript(script, 'main.js');
 | JSString | String |
 | JSNumber | Number |
 | JSFloat | Number |
-| Boolean | JSBool |
+| JSBool | Boolean |
 | JSArray | Array |
 | JSFunction | Function |
 | JSPromise | Promise |
@@ -117,7 +117,7 @@ import 'package:dart_quickjs/dart_quickjs.dart';
 final runtime = Runtime(
   moduleLoader: (String name) {
     if (name == 'message') {
-      return "export const message = 'dart_quickjs'";;
+      return "export const message = 'dart_quickjs'";
     }
 
     return '';

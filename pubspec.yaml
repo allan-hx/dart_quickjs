@@ -1,6 +1,6 @@
 name: dart_quickjs
 description: Use Dart FFI to bind Quickjs
-version: 0.0.2
+version: 0.0.3
 homepage: https://github.com/allan-hx/dart_quickjs
 repository: https://github.com/allan-hx/dart_quickjs
 
