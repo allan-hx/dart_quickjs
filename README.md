@@ -73,7 +73,7 @@ runtime.global.setPropertyStr('add', value);
 runtime.evaluateJavaScript('println(add(1));', 'main.js');
 ```
 
-## 通信
+## Communication
 Calling ```Dart``` from ```JavaScript```
 ```dart
 import 'package:dart_quickjs/dart_quickjs.dart';
