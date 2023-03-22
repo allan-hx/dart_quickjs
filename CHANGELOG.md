@@ -8,3 +8,7 @@
 * TODO: Add a destroy method
 * TODO: Add a println print method
 * TODO: Optimize memory leaks
+## 0.0.4
+* TODO: Addition of macOS platform, 
+* TODO: addition of bytecode compilation
+* TODO: Addition of bytecode execution.
