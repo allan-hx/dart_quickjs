@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:ffi';
+import 'dart:typed_data';
 import 'package:ffi/ffi.dart';
 
 import 'cache.dart';
@@ -171,6 +172,42 @@ class Runtime extends Observer {
     dispatch();
 
     return value.toJSValue(_context);
+  }
+
+  // 运行字节码
+  JSObject evaluateBytecode(Uint8List bytecode) {
+    // 转换
+    final Pointer<Uint8> pointer = calloc<Uint8>(bytecode.length);
+    pointer.asTypedList(bytecode.length).setAll(0, bytecode);
+    // 执行
+    final value = library.evaluateBytecode(context, bytecode.length, pointer);
+
+    calloc.free(pointer);
+
+    if (value.isException) {
+      final message = _context.exception;
+      throw '执行异常:$message';
+    }
+
+    return value.toJSValue(context);
+  }
+
+  // 编译字节码
+  Uint8List compile(String script, String fileName) {
+    final scriptPtr = script.toNativeUtf8().cast<Char>();
+    final fileNamePtr = fileName.toNativeUtf8().cast<Char>();
+    final lengthPtr = calloc<IntPtr>();
+    final value = library.compile(context, scriptPtr, fileNamePtr, lengthPtr);
+    final length = lengthPtr.value;
+    final data = Uint8List.fromList(value.asTypedList(length));
+
+    // 释放内存
+    calloc.free(scriptPtr);
+    calloc.free(fileNamePtr);
+    calloc.free(lengthPtr);
+    calloc.free(value);
+
+    return data;
   }
 
   // 加载模块

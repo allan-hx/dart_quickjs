@@ -131,6 +131,7 @@ const main  = '''
 // 执行代码
 runtime.evaluateJavaScript(main, 'main.js', JSEvalType.module);
 ```
+
 ## 销毁和释放
 ```dart
 import 'package:dart_quickjs/dart_quickjs.dart';
@@ -140,5 +141,56 @@ final runtime = Runtime();
 // 释放运行时
 runtime.destroy();
 ```
-## 内置api方法
+
+## 插件
+```dart
+import 'package:dart_quickjs/dart_quickjs.dart';
+
+class Test extends Plugin {
+  late Runtime _runtime;
+
+  @override
+  void onCreate(Runtime runtime) {
+    _runtime = runtime;
+    // 注入方法
+    runtime.global.setPropertyStr(
+      'getMessage',
+      JSFunction.create(runtime.context, test),
+    );
+  }
+
+  JSString test(JSString data) {
+    return JSString.create(_runtime.context, '${data.value} World');
+  }
+
+  @override
+  void destroy(Runtime runtime) {}
+}
+
+final runtime = Runtime(
+  plugins: [
+    // 注册插件
+    Test()
+  ],
+);
+
+const script = 'println(getMessage("Hello"));';
+runtime.evaluateJavaScript(script, 'main.js');
+```
+
+## 字节码
+
+```dart
+import 'package:dart_quickjs/dart_quickjs.dart';
+
+final runtime = Runtime();
+
+const script = 'println("Hello World");';
+// 编译字节码
+final bytecode = runtime.compile(script, 'main.js');
+// 运行字节码
+runtime.evaluateBytecode(bytecode);
+```
+
+## 内置 javascript api方法
 ```println``` ```setInterval``` ```clearInterval``` ```setTimeout``` ```clearTimeout```

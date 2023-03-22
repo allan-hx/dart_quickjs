@@ -50,6 +50,29 @@ extern "C" {
     return new JSValue(JS_GetGlobalObject(ctx));
   }
 
+  DART_EXPORT uint8_t *CompileScript(JSContext *ctx, const char *script, const char *fileName, size_t *lengthPtr) {
+    JSValue value = JS_Eval(ctx, script, strlen(script), fileName, JS_EVAL_FLAG_COMPILE_ONLY);
+
+    if (JS_IsException(value)) {
+      JS_FreeValue(ctx, value);
+      return NULL;
+    }
+
+    return JS_WriteObject(ctx, lengthPtr, value, JS_WRITE_OBJ_BYTECODE);
+  }
+
+  DART_EXPORT JSValue *EvaluateBytecode(JSContext *ctx, size_t length, uint8_t *buf) {
+    JSValue obj = JS_ReadObject(ctx, buf, length, JS_READ_OBJ_BYTECODE);
+
+    if (JS_IsException(obj)) {
+      return NULL;
+    }
+
+    JSValue value = JS_EvalFunction(ctx, obj);
+
+    return new JSValue(value);
+  }
+
   DART_EXPORT JSValue *EvaluateJavaScript(JSContext *ctx, const char *script, const char *fileName, int32_t flags) {
     JSRuntime *runtime = JS_GetRuntime(ctx);
     JS_UpdateStackTop(runtime);
@@ -155,7 +178,7 @@ extern "C" {
   }
 
   DART_EXPORT void FreeRuntime(JSRuntime *runtime) {
-    JS_SetRuntimeOpaque(runtime, nullptr);
+    JS_SetRuntimeOpaque(runtime, NULL);
     JS_FreeRuntime(runtime);
   }
 

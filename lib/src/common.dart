@@ -9,7 +9,8 @@ class Common {
   Common._();
 
   // js to string
-  static String? jsToString(Pointer<JSContext> context, Pointer<JSValue> value) {
+  static String? jsToString(
+      Pointer<JSContext> context, Pointer<JSValue> value) {
     final pointer = library.jsToCString(context, value);
 
     if (pointer.address != 0) {

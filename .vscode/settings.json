@@ -5,6 +5,22 @@
     "*.txt": "makefile",
     "sstream": "cpp",
     "__config": "cpp",
-    "__nullptr": "cpp"
-  }
+    "__nullptr": "cpp",
+    "__bit_reference": "cpp",
+    "__node_handle": "cpp",
+    "atomic": "cpp",
+    "bitset": "cpp",
+    "__memory": "cpp",
+    "limits": "cpp",
+    "locale": "cpp",
+    "optional": "cpp",
+    "ratio": "cpp",
+    "system_error": "cpp",
+    "tuple": "cpp",
+    "type_traits": "cpp",
+    "vector": "cpp",
+    "chrono": "cpp",
+    "cstddef": "cpp"
+  },
+  "C_Cpp.errorSquiggles": "disabled"
 }

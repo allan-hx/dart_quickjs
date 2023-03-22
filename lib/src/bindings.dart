@@ -48,6 +48,23 @@ class QuickjsLibrary {
       lookup<NativeFunction<Pointer<JSValue> Function(Pointer<JSContext>)>>(
           'GetGlobalObject');
 
+  // 编译字节码
+  late final compile = _compile.asFunction<
+      Pointer<Uint8> Function(
+          Pointer<JSContext>, Pointer<Char>, Pointer<Char>, Pointer<IntPtr>)>();
+  late final _compile = lookup<
+      NativeFunction<
+          Pointer<Uint8> Function(Pointer<JSContext>, Pointer<Char>,
+              Pointer<Char>, Pointer<IntPtr>)>>('CompileScript');
+
+  // 运行字节码
+  late final evaluateBytecode = _evaluateBytecode.asFunction<
+      Pointer<JSValue> Function(Pointer<JSContext>, int, Pointer<Uint8>)>();
+  late final _evaluateBytecode = lookup<
+      NativeFunction<
+          Pointer<JSValue> Function(
+              Pointer<JSContext>, Size, Pointer<Uint8>)>>('EvaluateBytecode');
+
   // 运行js代码
   late final evaluateJavaScript = _evaluateJavaScript.asFunction<
       Pointer<JSValue> Function(

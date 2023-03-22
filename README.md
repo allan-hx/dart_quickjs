@@ -130,6 +130,57 @@ const main  = '''
 // Execute code
 runtime.evaluateJavaScript(main, 'main.js', JSEvalType.module);
 ```
+
+## Plugin
+```dart
+import 'package:dart_quickjs/dart_quickjs.dart';
+
+class Test extends Plugin {
+  late Runtime _runtime;
+
+  @override
+  void onCreate(Runtime runtime) {
+    _runtime = runtime;
+    // Injection Method
+    runtime.global.setPropertyStr(
+      'getMessage',
+      JSFunction.create(runtime.context, test),
+    );
+  }
+
+  JSString test(JSString data) {
+    return JSString.create(_runtime.context, '${data.value} World');
+  }
+
+  @override
+  void destroy(Runtime runtime) {}
+}
+
+final runtime = Runtime(
+  plugins: [
+    // Register Plugin
+    Test()
+  ],
+);
+
+const script = 'println(getMessage("Hello"));';
+runtime.evaluateJavaScript(script, 'main.js');
+```
+
+## Bytecode
+
+```dart
+import 'package:dart_quickjs/dart_quickjs.dart';
+
+final runtime = Runtime();
+
+const script = 'println("Hello World");';
+// Compile Bytecode
+final bytecode = runtime.compile(script, 'main.js');
+// Run Bytecode
+runtime.evaluateBytecode(bytecode);
+```
+
 ## Destroy and release
 ```dart
 import 'package:dart_quickjs/dart_quickjs.dart';

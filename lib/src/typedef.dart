@@ -85,7 +85,7 @@ enum JSEvalType {
   indirect(3),
 
   mask(3);
- 
+
   const JSEvalType(this.value);
 
   final int value;

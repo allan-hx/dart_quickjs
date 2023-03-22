@@ -20,6 +20,12 @@ extern "C" {
   // 获取全局对象
   DART_EXPORT JSValue *GetGlobalObject(JSContext *ctx);
 
+  // 编译字节码
+  DART_EXPORT uint8_t *CompileScript(JSContext *ctx, const char *script, const char *fileName, size_t *lengthPtr);
+
+  // 运行字节码
+  DART_EXPORT JSValue *EvaluateBytecode(JSContext *ctx, size_t length, uint8_t *buf);
+
   // 执行js代码
   DART_EXPORT JSValue *EvaluateJavaScript(JSContext *ctx, const char *script, const char *fileName, int32_t flags);
 
