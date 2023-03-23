@@ -57,7 +57,7 @@ extension PointerJSContext on Pointer<JSContext> {
   void executePendingJob() {
     final runtime = library.getRuntime(this);
 
-    Timer.run(() {
+    Future(() {
       while (true) {
         int err = library.executePendingJob(runtime);
 

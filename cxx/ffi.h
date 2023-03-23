@@ -110,6 +110,9 @@ extern "C" {
   // 调用js方法
   DART_EXPORT JSValue *CallFuncton(JSContext *ctx, JSValueConst *func_obj, JSValueConst *this_obj, int32_t argc, JSValueConst *argv);
 
+  // 调用构造函数
+  DART_EXPORT JSValue *CallConstructor(JSContext *ctx, JSValueConst *func_obj, int argc, JSValueConst *argv);
+
   // 是否是数组
   DART_EXPORT int32_t IsArray(JSContext *ctx, JSValueConst *value);
 
@@ -118,4 +121,7 @@ extern "C" {
 
   // 是否是promise
   DART_EXPORT int32_t IsPromise(JSContext *ctx, JSValueConst *value);
+
+  // 是否是构造函数
+  DART_EXPORT int32_t IsConstructor(JSContext *ctx, JSValueConst *value);
 }

@@ -53,15 +53,7 @@ class JSObject {
 
     malloc.free(keyPointer);
 
-    if (state == 1) {
-      if (value is JSFunction) {
-        value._subscription();
-      }
-
-      return true;
-    }
-
-    return false;
+    return state == 1;
   }
 
   // 设置属性 - key为js value
@@ -74,15 +66,7 @@ class JSObject {
       flags.value,
     );
 
-    if (state == 1) {
-      if (value is JSFunction) {
-        value._subscription();
-      }
-
-      return true;
-    }
-
-    return false;
+    return state == 1;
   }
 
   // 获取属性 - key为string
@@ -117,14 +101,14 @@ class JSObject {
     _pointer = library.dupValue(context, pointer);
   }
 
-  // 释放 - 异步
+  // 释放 - 同步
   void free() {
     library.freeValue(context, pointer);
   }
 
   // 释放 - 异步
   void freeAsync() {
-    Timer.run(free);
+    Future(free);
   }
 
   @override
@@ -147,6 +131,73 @@ class JSString extends JSObject {
 
   @override
   String get value => super.toString();
+
+  int get length {
+    return getPropertyStr<JSNumber>('length')!.value;
+  }
+
+  JSNumber indexOf(String value) {
+    final indexOf = getPropertyStr<JSFunction>('indexOf')!;
+    final args = JSString.create(context, value);
+    Future(args.free);
+    return indexOf.call([args], this) as JSNumber;
+  }
+
+  JSNumber lastIndexOf(String value) {
+    final lastIndexOf = getPropertyStr<JSFunction>('lastIndexOf')!;
+    final args = JSString.create(context, value);
+    Future(args.free);
+    return lastIndexOf.call([args], this) as JSNumber;
+  }
+
+  JSBool includes(String value) {
+    final includes = getPropertyStr<JSFunction>('includes')!;
+    final args = JSString.create(context, value);
+    Future(args.free);
+    return includes.call([args], this) as JSBool;
+  }
+
+  JSArray split(String separator) {
+    final split = getPropertyStr<JSFunction>('split')!;
+    final args = JSString.create(context, separator);
+    Future(args.free);
+    return split.call([args], this) as JSArray;
+  }
+
+  JSString slice([int? start, int? end]) {
+    final slice = getPropertyStr<JSFunction>('slice')!;
+    final List<JSNumber> args = [];
+
+    if (start != null) {
+      args.add(JSNumber.create(context, start));
+    }
+
+    if (end != null) {
+      args.add(JSNumber.create(context, end));
+    }
+
+    Future(() {
+      for (final item in args) {
+        item.free();
+      }
+    });
+
+    return slice.call(args, this) as JSString;
+  }
+
+  JSString concat(List<String> list) {
+    final concat = getPropertyStr<JSFunction>('concat')!;
+    final List<JSString> args =
+        list.map((item) => JSString.create(context, item)).toList();
+
+    Future(() {
+      for (final item in args) {
+        item.free();
+      }
+    });
+
+    return concat.call(args, this) as JSString;
+  }
 }
 
 class JSNumber extends JSObject {
@@ -198,23 +249,24 @@ class JSArray extends JSObject {
     return List.generate(length, (int value) => index(value));
   }
 
-  // 数组长度
+  static bool isArray(Runtime runtime, JSObject data) {
+    final value = library.isArray(runtime.context, data.pointer);
+    return value == 1;
+  }
+
   int get length {
     final data = getPropertyStr<JSNumber>('length');
     return data!.value;
   }
 
-  // 根据下标获取
   T index<T extends JSObject>(int index) {
     final key = JSNumber.create(context, index);
     key.freeAsync();
     return getProperty<T>(key)!;
   }
 
-  // 添加
   bool push(JSObject value) => set(length, value);
 
-  // 设置和修改
   bool set(int index, JSObject value, [JSProp flags = JSProp.cwe]) {
     final state = library.definePropertyValueUint32(
       context,
@@ -254,7 +306,41 @@ class JSArray extends JSObject {
 
     args.addAll(value ?? <JSObject>[]);
 
+    Future(() {
+      for (final item in args) {
+        item.free();
+      }
+    });
+
     return splice.call(args, this) as JSArray;
+  }
+
+  JSString join(String separator) {
+    final join = getPropertyStr<JSFunction>('join')!;
+    final args = JSString.create(context, separator);
+    Future(args.free);
+    return join.call([], this) as JSString;
+  }
+
+  JSArray slice([int? start, int? end]) {
+    final slice = getPropertyStr<JSFunction>('slice')!;
+    final List<JSNumber> args = [];
+
+    if (start != null) {
+      args.add(JSNumber.create(context, start));
+    }
+
+    if (end != null) {
+      args.add(JSNumber.create(context, end));
+    }
+
+    Future(() {
+      for (final item in args) {
+        item.free();
+      }
+    });
+
+    return slice.call(args, this) as JSArray;
   }
 
   JSArray concat(JSArray value) {
@@ -270,6 +356,11 @@ class JSArray extends JSObject {
   JSNumber lastIndexOf(JSObject value) {
     final lastIndexOf = getPropertyStr<JSFunction>('lastIndexOf')!;
     return lastIndexOf.call([value], this) as JSNumber;
+  }
+
+  JSBool includes(JSObject value) {
+    final includes = getPropertyStr<JSFunction>('includes')!;
+    return includes.call([value], this) as JSBool;
   }
 
   JSArray reverse() {
@@ -301,18 +392,19 @@ class JSFunction extends JSObject {
     super.context,
     super.pointer, {
     this.callback,
-  }) : _runtime = Cache.instance.getRuntime(context);
+  });
 
   // 回调
   final Function? callback;
-  // 当前运行时
-  final Runtime _runtime;
 
   factory JSFunction.create(Pointer<JSContext> context, Function callback) {
+    final runtime = Cache.instance.getRuntime(context);
     final symbol = callback.hashCode.toString().toNativeUtf8().cast<Char>();
     final pointer = library.newCFunctionData(context, symbol);
 
     malloc.free(symbol);
+    // 订阅
+    runtime.on(callback.hashCode.toString(), callback);
 
     return JSFunction(
       context,
@@ -321,20 +413,15 @@ class JSFunction extends JSObject {
     );
   }
 
-  // 释放 - 异步
   @override
   void free() {
-    final symbol = callback.hashCode.toString();
-    _runtime.off(symbol);
+    off();
     super.free();
   }
 
-  // 添加订阅
-  void _subscription() {
-    if (callback != null) {
-      final String symbol = callback.hashCode.toString();
-      _runtime.on(symbol, callback!);
-    }
+  @override
+  void freeAsync() {
+    Future(free);
   }
 
   JSObject call([List<JSObject>? args, JSObject? self]) {
@@ -352,6 +439,13 @@ class JSFunction extends JSObject {
     }
 
     return value.toJSValue(context);
+  }
+
+  // 对象需要在适当的时候调用此方法解除订阅，以免造成内存泄漏
+  void off() {
+    final runtime = Cache.instance.getRuntime(context);
+    final symbol = callback.hashCode.toString();
+    runtime.off(symbol);
   }
 }
 
@@ -437,6 +531,56 @@ class JSPromise extends JSObject {
     context.executePendingJob();
     return value as JSPromise;
   }
+}
+
+class JSRegExp extends JSObject {
+  JSRegExp(super.context, super.pointer);
+
+  factory JSRegExp.create(
+    Pointer<JSContext> context,
+    String pattern, [
+    String? flags,
+  ]) {
+    final args = [JSString.create(context, pattern)];
+
+    if (flags != null) {
+      args.add(JSString.create(context, flags));
+    }
+
+    final global = library.getGlobalObject(context);
+    final keyPointer = 'RegExp'.toNativeUtf8().cast<Char>();
+    // 获取构造函数
+    final constructor = library.getPropertyStr(context, global, keyPointer);
+
+    malloc.free(keyPointer);
+
+    final pointer = Common.callConstructor(context, constructor, args);
+
+    return JSRegExp(context, pointer);
+  }
+
+  bool test(String value) {
+    final test = getPropertyStr<JSFunction>('test')!;
+    final args = JSString.create(context, value);
+
+    Future(args.free);
+
+    return (test.call([args], this) as JSBool).value;
+  }
+
+  JSArray? exec(String value) {
+    final exec = getPropertyStr<JSFunction>('exec')!;
+    final args = JSString.create(context, value);
+
+    Future(args.free);
+
+    final data = exec.call([args], this);
+
+    return data is JSArray ? data : null;
+  }
+
+  @override
+  String get value => toString();
 }
 
 class JSNull extends JSObject {

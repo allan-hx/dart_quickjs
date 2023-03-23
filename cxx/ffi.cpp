@@ -206,6 +206,11 @@ extern "C" {
     return new JSValue(JS_Call(ctx, *func_obj, *this_obj, argc, argv));
   }
 
+  DART_EXPORT JSValue *CallConstructor(JSContext *ctx, JSValueConst *func_obj, int argc, JSValueConst *argv) {
+    JSValue value = JS_CallConstructor(ctx, *func_obj, argc, argv);
+    return new JSValue(value);
+  }
+
   DART_EXPORT int32_t IsArray(JSContext *ctx, JSValueConst *value) {
     return JS_IsArray(ctx, *value);
   }
@@ -216,5 +221,9 @@ extern "C" {
 
   DART_EXPORT int32_t IsPromise(JSContext *ctx, JSValueConst *value) {
     return JS_IsPromise(ctx, *value);
+  }
+
+  DART_EXPORT int32_t IsConstructor(JSContext *ctx, JSValueConst *value) {
+    return JS_IsConstructor(ctx, *value);
   }
 }

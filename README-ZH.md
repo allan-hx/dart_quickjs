@@ -4,7 +4,7 @@
 
 Language: 简体中文 | [English](README.md)
 
-```dart_quickjs```是一个使用```Dart```对```QuickJS```引擎的一个绑定，支持在```Android``` ```IOS```中执行```JavaScript```代码, ```QuickJS``` 是一款轻量级, 并支持ECMAScript 2019规范的```JavaScript```引擎
+```dart_quickjs```是一个使用```Dart```对```QuickJS```引擎的一个绑定，支持在```Android``` ```IOS```中执行```JavaScript```代码, ```QuickJS``` 是一款轻量级, 并支持ECMAScript 2020规范的```JavaScript```引擎
 
 ## 开始使用
 

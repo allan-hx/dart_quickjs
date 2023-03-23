@@ -1,6 +1,4 @@
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:dart_quickjs/dart_quickjs.dart';
 
 void main(List<String> args) {
@@ -57,25 +55,11 @@ class Home extends StatelessWidget {
             // 执行字符串
             ElevatedButton(
               onPressed: () async {
-                final script = await rootBundle.loadString('assets/main.js');
-                // 执行字符串
-                final int time = DateTime.now().millisecondsSinceEpoch;
-                runtime.evaluateJavaScript(script, 'main.js');
-                print(DateTime.now().millisecondsSinceEpoch - time);
+                final reg = JSRegExp.create(runtime.context, 'Hello');
+                final value = reg.exec('Hello World');
+                print(value);
               },
               child: const Text('Run Script'),
-            ),
-            const SizedBox(height: 20),
-            // 执行字符串
-            ElevatedButton(
-              onPressed: () async {
-                final data = await rootBundle.load('assets/main.bin');
-                final bytecode = Uint8List.view(data.buffer);
-                final int time = DateTime.now().millisecondsSinceEpoch;
-                runtime.evaluateBytecode(bytecode);
-                print(DateTime.now().millisecondsSinceEpoch - time);
-              },
-              child: const Text('Run Bytecode'),
             ),
             const SizedBox(height: 20),
             // 销毁

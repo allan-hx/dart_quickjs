@@ -311,6 +311,15 @@ class QuickjsLibrary {
           Pointer<JSValue> Function(Pointer<JSContext>, Pointer<JSValue>,
               Pointer<JSValue>, Int32, Pointer<JSValue>)>>('CallFuncton');
 
+  // 执行构造函数
+  late final callConstructor = _callConstructor.asFunction<
+      Pointer<JSValue> Function(
+          Pointer<JSContext>, Pointer<JSValue>, int, Pointer<JSValue>)>();
+  late final _callConstructor = lookup<
+      NativeFunction<
+          Pointer<JSValue> Function(Pointer<JSContext>, Pointer<JSValue>, Int,
+              Pointer<JSValue>)>>('CallConstructor');
+
   // 是否是数组
   late final isArray =
       _isArray.asFunction<int Function(Pointer<JSContext>, Pointer<JSValue>)>();
@@ -331,4 +340,11 @@ class QuickjsLibrary {
   late final _isPromise = lookup<
           NativeFunction<Int32 Function(Pointer<JSContext>, Pointer<JSValue>)>>(
       'IsPromise');
+
+  // 是否是构造函数
+  late final isConstructor = _isConstructor
+      .asFunction<int Function(Pointer<JSContext>, Pointer<JSValue>)>();
+  late final _isConstructor = lookup<
+          NativeFunction<Int Function(Pointer<JSContext>, Pointer<JSValue>)>>(
+      'IsConstructor');
 }

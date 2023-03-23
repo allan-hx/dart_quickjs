@@ -53,9 +53,9 @@ packages:
   dart_quickjs:
     dependency: "direct main"
     description:
-      name: dart_quickjs
-      url: "https://pub.dartlang.org"
-    source: hosted
+      path: ".."
+      relative: true
+    source: path
     version: "0.0.4"
   fake_async:
     dependency: transitive

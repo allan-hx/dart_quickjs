@@ -215,7 +215,7 @@ class Runtime extends Observer {
     final script = moduleLoader!(name);
     final pointer = script.toNativeUtf8().cast<Char>();
 
-    Timer.run(() {
+    Future(() {
       malloc.free(pointer);
     });
 

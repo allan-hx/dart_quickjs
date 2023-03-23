@@ -4,7 +4,7 @@
 
 Language: English | [简体中文](README-ZH.md)
 
-```dart_quickjs``` is a binding for the ```QuickJS``` engine using Dart, which supports executing JavaScript code on ```Android``` and ```iOS```. QuickJS is a lightweight JavaScript engine that supports the ECMAScript 2019 specification.
+```dart_quickjs``` is a binding for the ```QuickJS``` engine using Dart, which supports executing JavaScript code on ```Android``` and ```iOS```. QuickJS is a lightweight JavaScript engine that supports the ECMAScript 2020 specification.
 
 ## Get started
 
