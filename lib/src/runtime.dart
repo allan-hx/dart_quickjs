@@ -21,6 +21,7 @@ class Runtime extends Observer {
   }) : runtime = library.newRuntime() {
     _init(
       stackSize: stackSize,
+      memoryLimit: memoryLimit,
       plugins: plugins,
     );
   }
@@ -45,41 +46,6 @@ class Runtime extends Observer {
     // 计时器
     SetInterval(),
   ];
-
-  // 通道
-  static Pointer _channel(
-    Pointer<JSContext> context,
-    Pointer<Char> symbol,
-    int argc,
-    Pointer<JSValue> argv,
-  ) {
-    // 获取运行时
-    final runtime = Cache.instance.getRuntime(context);
-    // 方法标识
-    final name = symbol.cast<Utf8>().toDartString();
-    // 参数
-    final List<JSObject> args = List.generate(argc, (index) {
-      final ptr = argv.address + (jsValueSizeOf * index);
-      final value = Pointer.fromAddress(ptr).cast<JSValue>();
-      return value.toJSValue(context);
-    });
-
-    // 日志打印
-    if (name == runtime._println.hashCode.toString()) {
-      runtime._println(args);
-      return undefined;
-    }
-
-    switch (name) {
-      // 模块加载
-      case 'module_loader':
-        final moduleName = (args.first as JSString).value;
-
-        return runtime._moduleLoader(moduleName);
-      default:
-        return runtime.emit(name, args).pointer;
-    }
-  }
 
   void _init({
     // 栈大小
@@ -247,5 +213,39 @@ class Runtime extends Observer {
     global.free();
     library.freeContext(context);
     library.freeRuntime(runtime);
+  }
+}
+
+Pointer _channel(
+  Pointer<JSContext> context,
+  Pointer<Char> symbol,
+  int argc,
+  Pointer<JSValue> argv,
+) {
+  // 获取运行时
+  final runtime = Cache.instance.getRuntime(context);
+  // 方法标识
+  final name = symbol.cast<Utf8>().toDartString();
+  // 参数
+  final List<JSObject> args = List.generate(argc, (index) {
+    final ptr = argv.address + (jsValueSizeOf * index);
+    final value = Pointer.fromAddress(ptr).cast<JSValue>();
+    return value.toJSValue(context);
+  });
+
+  // 日志打印
+  if (name == runtime._println.hashCode.toString()) {
+    runtime._println(args);
+    return undefined;
+  }
+
+  switch (name) {
+    // 模块加载
+    case 'module_loader':
+      final moduleName = (args.first as JSString).value;
+
+      return runtime._moduleLoader(moduleName);
+    default:
+      return runtime.emit(name, args).pointer;
   }
 }
