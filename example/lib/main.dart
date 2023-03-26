@@ -11,6 +11,7 @@ class Test extends Plugin {
   @override
   void onCreate(Runtime runtime) {
     _runtime = runtime;
+
     runtime.global.setPropertyStr(
       'getMessage',
       JSFunction.create(runtime.context, test),
@@ -41,7 +42,7 @@ class Home extends StatelessWidget {
 
   final runtime = Runtime(
     plugins: [
-      Test(),
+      // Test(),
     ],
   );
 
@@ -55,9 +56,10 @@ class Home extends StatelessWidget {
             // 执行字符串
             ElevatedButton(
               onPressed: () async {
-                final reg = JSRegExp.create(runtime.context, 'Hello');
-                final value = reg.exec('Hello World');
+                final text = JSString.create(runtime.context, 'Hello World');
+                final value = text.indexOf('Hello');
                 print(value);
+                text.free();
               },
               child: const Text('Run Script'),
             ),

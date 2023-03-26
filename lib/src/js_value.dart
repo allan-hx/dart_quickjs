@@ -139,29 +139,45 @@ class JSString extends JSObject {
   JSNumber indexOf(String value) {
     final indexOf = getPropertyStr<JSFunction>('indexOf')!;
     final args = JSString.create(context, value);
-    Future(args.free);
-    return indexOf.call([args], this) as JSNumber;
+    final result = indexOf.call([args], this) as JSNumber;
+
+    args.free();
+    indexOf.free();
+
+    return result;
   }
 
   JSNumber lastIndexOf(String value) {
     final lastIndexOf = getPropertyStr<JSFunction>('lastIndexOf')!;
     final args = JSString.create(context, value);
-    Future(args.free);
-    return lastIndexOf.call([args], this) as JSNumber;
+    final result = lastIndexOf.call([args], this) as JSNumber;
+
+    args.free();
+    lastIndexOf.free();
+
+    return result;
   }
 
   JSBool includes(String value) {
     final includes = getPropertyStr<JSFunction>('includes')!;
     final args = JSString.create(context, value);
-    Future(args.free);
-    return includes.call([args], this) as JSBool;
+    final result = includes.call([args], this) as JSBool;
+
+    args.free();
+    includes.free();
+
+    return result;
   }
 
   JSArray split(String separator) {
     final split = getPropertyStr<JSFunction>('split')!;
     final args = JSString.create(context, separator);
-    Future(args.free);
-    return split.call([args], this) as JSArray;
+    final result = split.call([args], this) as JSArray;
+
+    args.free();
+    split.free();
+
+    return result;
   }
 
   JSString slice([int? start, int? end]) {
@@ -176,27 +192,30 @@ class JSString extends JSObject {
       args.add(JSNumber.create(context, end));
     }
 
-    Future(() {
-      for (final item in args) {
-        item.free();
-      }
-    });
+    final result = slice.call(args, this) as JSString;
 
-    return slice.call(args, this) as JSString;
+    for (final item in args) {
+      item.free();
+    }
+
+    slice.free();
+
+    return result;
   }
 
   JSString concat(List<String> list) {
     final concat = getPropertyStr<JSFunction>('concat')!;
     final List<JSString> args =
         list.map((item) => JSString.create(context, item)).toList();
+    final result = concat.call(args, this) as JSString;
 
-    Future(() {
-      for (final item in args) {
-        item.free();
-      }
-    });
+    for (final item in args) {
+      item.free();
+    }
 
-    return concat.call(args, this) as JSString;
+    concat.free();
+
+    return result;
   }
 }
 
@@ -281,17 +300,26 @@ class JSArray extends JSObject {
 
   JSObject shift() {
     final shift = getPropertyStr<JSFunction>('shift')!;
+
+    shift.freeAsync();
+
     return shift.call(null, this);
   }
 
   JSNumber unshift(List<JSObject> args) {
     final unshift = getPropertyStr<JSFunction>('unshift')!;
+
+    unshift.freeAsync();
+
     return unshift.call(args, this) as JSNumber;
   }
 
   JSObject pop() {
-    final shift = getPropertyStr<JSFunction>('pop');
-    return shift!.call(null, this);
+    final pop = getPropertyStr<JSFunction>('pop')!;
+
+    pop.freeAsync();
+
+    return pop.call(null, this);
   }
 
   JSArray splice(int index, [int? howmany, List<JSObject>? value]) {
@@ -306,20 +334,26 @@ class JSArray extends JSObject {
 
     args.addAll(value ?? <JSObject>[]);
 
-    Future(() {
-      for (final item in args) {
-        item.free();
-      }
-    });
+    final result = splice.call(args, this) as JSArray;
 
-    return splice.call(args, this) as JSArray;
+    for (final item in args) {
+      item.free();
+    }
+
+    splice.free();
+
+    return result;
   }
 
   JSString join(String separator) {
     final join = getPropertyStr<JSFunction>('join')!;
     final args = JSString.create(context, separator);
-    Future(args.free);
-    return join.call([], this) as JSString;
+    final result = join.call([], this) as JSString;
+
+    args.free();
+    join.free();
+
+    return result;
   }
 
   JSArray slice([int? start, int? end]) {
@@ -334,37 +368,44 @@ class JSArray extends JSObject {
       args.add(JSNumber.create(context, end));
     }
 
-    Future(() {
-      for (final item in args) {
-        item.free();
-      }
-    });
+    final result = slice.call(args, this) as JSArray;
 
-    return slice.call(args, this) as JSArray;
+    for (final item in args) {
+      item.free();
+    }
+
+    slice.free();
+
+    return result;
   }
 
   JSArray concat(JSArray value) {
     final concat = getPropertyStr<JSFunction>('concat')!;
+    concat.freeAsync();
     return concat.call([value], this) as JSArray;
   }
 
   JSNumber indexOf(JSObject value) {
     final indexOf = getPropertyStr<JSFunction>('indexOf')!;
+    indexOf.freeAsync();
     return indexOf.call([value], this) as JSNumber;
   }
 
   JSNumber lastIndexOf(JSObject value) {
     final lastIndexOf = getPropertyStr<JSFunction>('lastIndexOf')!;
+    lastIndexOf.freeAsync();
     return lastIndexOf.call([value], this) as JSNumber;
   }
 
   JSBool includes(JSObject value) {
     final includes = getPropertyStr<JSFunction>('includes')!;
+    includes.freeAsync();
     return includes.call([value], this) as JSBool;
   }
 
   JSArray reverse() {
     final reverse = getPropertyStr<JSFunction>('reverse')!;
+    reverse.freeAsync();
     return reverse.call(null, this) as JSArray;
   }
 
@@ -551,10 +592,12 @@ class JSRegExp extends JSObject {
     final keyPointer = 'RegExp'.toNativeUtf8().cast<Char>();
     // 获取构造函数
     final constructor = library.getPropertyStr(context, global, keyPointer);
+    // 执行构造函数
+    final pointer = Common.callConstructor(context, constructor, args);
 
     malloc.free(keyPointer);
-
-    final pointer = Common.callConstructor(context, constructor, args);
+    library.freeValue(context, global);
+    library.freeValue(context, constructor);
 
     return JSRegExp(context, pointer);
   }
@@ -562,19 +605,21 @@ class JSRegExp extends JSObject {
   bool test(String value) {
     final test = getPropertyStr<JSFunction>('test')!;
     final args = JSString.create(context, value);
+    final result = test.call([args], this) as JSBool;
 
-    Future(args.free);
+    args.free();
+    test.free();
 
-    return (test.call([args], this) as JSBool).value;
+    return result.value;
   }
 
   JSArray? exec(String value) {
     final exec = getPropertyStr<JSFunction>('exec')!;
     final args = JSString.create(context, value);
-
-    Future(args.free);
-
     final data = exec.call([args], this);
+
+    args.free();
+    exec.free();
 
     return data is JSArray ? data : null;
   }

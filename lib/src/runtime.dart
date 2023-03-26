@@ -60,7 +60,8 @@ class Runtime extends Observer {
     // 创建默认上下文
     _context = library.newContext(runtime);
     // 获取全局对象
-    _global = JSObject(context, library.getGlobalObject(context));
+    final a = library.getGlobalObject(context);
+    _global = JSObject(context, a);
     // 设置通道方法
     final channel = Pointer.fromFunction<ChannelCallback>(_channel);
     library.setChannel(runtime, channel);

@@ -1,6 +1,6 @@
 name: dart_quickjs
 description: dart_quickjs is a binding for the QuickJS engine using Dart, which supports executing JavaScript code on Android and iOS
-version: 0.0.5
+version: 0.0.6
 homepage: https://github.com/allan-hx/dart_quickjs
 repository: https://github.com/allan-hx/dart_quickjs
 

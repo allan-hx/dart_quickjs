@@ -18,3 +18,5 @@
 * TODO: JSFunction adds the `off` method to remove subscriptions.
 * TODO: Update the JSFunction subscription logic to fix the issue where callback functions cannot be called when passed from Dart to JavaScript.
 * TODO: Add a new `JSRegExp` object.
+# 0.0.6
+* TODO: Fix Base Type Method Memory Leakss
